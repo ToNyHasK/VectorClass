@@ -11,6 +11,23 @@
 
 ## Versiju istorija (changelog)
 
+### [v0.2](https://github.com/ToNyHasK/VectorClass/releases/tag/v0.2) - (2019-05-19)
+
+**Pataisyta**
+
+- Readme 
+
+**Prideta**
+
+- Kiek kartu paskirsto atminti
+
+**Atminties paskirstymo tikrinimas**
+
+- std::vector capacity: 134217728 std::vector perskirstymu skaicius: 28
+
+- class Vector capacity: 268435456 class Vector perskirstymu skaicius:13
+
+
 ### [v0.1](https://github.com/ToNyHasK/VectorClass/releases/tag/v0.1) - (2019-05-18)
 
 **Funkciju aprašymas**
@@ -44,4 +61,3 @@
 	- whole program with 100000 students: 4.65151 s
 - class Vector:
 	- whole program with 100000 students: 4.82345 s
-	
