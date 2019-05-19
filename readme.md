@@ -7,7 +7,7 @@
 ## Idiegimas (Unix kompiuteryje) 
 
 - `git clone https://github.com/ToNyHasK/VectorClass.git`
-- `cd VUObjektinisNO3`
+- `cd VectorClass`
 
 ## Versiju istorija (changelog)
 
@@ -37,6 +37,7 @@
 	-su sz = 1000000: 0.006447 s
 	-su sz = 10000000: 0.0624899 s
 	-su sz = 100000000: 0.816916 s
+
 **Laiko tikrinimas treciojoje užd.**
 
 - std::vector:
