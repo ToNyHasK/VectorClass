@@ -11,6 +11,34 @@
 
 ## Versiju istorija (changelog)
 
+### [v0.3](https://github.com/ToNyHasK/VectorClass/releases/tag/v0.3) - (2019-05-27)
+
+**Pataisyta**
+
+- vectoriaus atminties perskirstymas
+
+**PridÄ—ta**
+
+- vector<studentas> laiko skaiÄiavimas
+
+|perskirstymu ir laiko skaiciavimas su std::vector(int, stud) ir Class vector(int, stud)|
+|-----------------------------------------------------------------
+|std::vector capacity: 134217728 std::vector perskirstymu skaicius(int): 28
+|Vector capacity: 136216564 Vector perskirstymu skaicius(int):44
+|Laiko matavimas su std::vector(int)
+|Elapsed time with size of: 10000 std::vector(int): 0 s
+|Elapsed time with size of: 10000 Class vector(int): 0 s
+|Elapsed time with size of: 100000 std::vector(int): 0.0019944 s
+|Elapsed time with size of: 100000 Class vector(int): 0.0011221 s
+|Elapsed time with size of: 1000000 std::vector(int): 0.0221155 s
+|Elapsed time with size of: 1000000 Class vector(int): 0.0092758 s
+|Elapsed time with size of: 10000000 std::vector(int): 0.220563 s
+|Elapsed time with size of: 10000000 Class vector(int): 0.0944828 s
+|Elapsed time with size of: 100000000 std::vector(int): 2.13769 s
+|Elapsed time with size of: 100000000 Class vector(int): 1.07763 s
+|Elapsed time with size of: 10000 std::vector(studentas): 0.0110627 s
+|Elapsed time with size of: 10000 Class vector(studentas): 0.0090333 s
+
 ### [v0.2](https://github.com/ToNyHasK/VectorClass/releases/tag/v0.2) - (2019-05-19)
 
 **Pataisyta**
@@ -30,15 +58,15 @@
 
 ### [v0.1](https://github.com/ToNyHasK/VectorClass/releases/tag/v0.1) - (2019-05-18)
 
-**Funkciju aprašymas**
+**Funkciju apraï¿½ymas**
 
-- **operator=**: priskiria konteineriui reikšme
+- **operator=**: priskiria konteineriui reikï¿½me
 - **front**: prieiga prie pirmo elemento
-- **emty**: patikrina ar konteineris tušcias
+- **emty**: patikrina ar konteineris tuï¿½cias
 - **insert**: prideda elementus
 - **push_back**: prideda elementus i pabaiga
 - **swap**: sukeicia turini
-- **begin cbegin**:graina iteratoriu i pradia
+- **begin cbegin**:graï¿½ina iteratoriu i pradï¿½ia
 
 **Laiko tikrinimas**
 
@@ -55,7 +83,7 @@
 	-su sz = 10000000: 0.0624899 s
 	-su sz = 100000000: 0.816916 s
 
-**Laiko tikrinimas treciojoje ud.**
+**Laiko tikrinimas treciojoje uï¿½d.**
 
 - std::vector:
 	- whole program with 100000 students: 4.65151 s

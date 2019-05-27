@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <chrono>
 #include <iostream>
+#include <cmath>
 
 #define VECTOR_MAX_SIZE 1000000000
 
@@ -32,7 +33,10 @@ private:
     unsigned int cap = 4;
     T* elem;
 
-    inline void reallocate();
+    void reallocate(const unsigned int &szA, const unsigned int &capA) {
+        sz = szA;
+        cap = capA;
+    }
 
 public:
     //Member type
@@ -49,18 +53,19 @@ public:
     typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 //constructors
     //initializer
-    Vector() noexcept;//default
-    explicit Vector(size_type sp);
-    Vector(size_type s, const T &value);
-    Vector(typename Vector<T>::iterator first, typename Vector<T>::iterator last);
-    Vector(std::initializer_list<T>);
-    Vector(const Vector<T> &);
-    Vector(Vector<T> &&) noexcept;
-    ~Vector() {delete[] elem;}//deconstruct
+    Vector() : sz(0), cap(0), elem(new T[sz]) {};
+    Vector(unsigned int size, T val) : sz(size), cap(size), elem(new T[size]) {std::fill_n(elem, sz, val);}
+    Vector(std::initializer_list<T> list) : sz(list.size()), cap(list.size()), elem(new T[list.size()]) { std::copy(list.begin(), list.end(), elem);}
+    explicit Vector(unsigned int sk) : sz(sk), cap(sk), elem(new T[sk]) {};
+    Vector(const Vector<T>& v) : elem{new T[v.sz]}, sz{v.sz}, cap{v.cap} {
+        std::copy(v.begin(), v.end(), (*this).begin());
+    }
+    Vector(Vector&& v) noexcept : sz{v.sz}, cap{v.cap}, elem{v.elem} {v.elem = nullptr; v.sz = 0; v.cap = 0;}
+    ~Vector() {delete[] elem;}
+
+
     //Iterators
-    iterator begin() noexcept;
     const_iterator cbegin() const noexcept;
-    iterator end()noexcept;
     const_iterator cend() const noexcept;
     reverse_iterator rbegin() noexcept;
     const_reverse_iterator crbegin() const noexcept;
@@ -75,14 +80,15 @@ public:
     void assign(typename Vector<T>::iterator, typename Vector<T>::iterator);
     void assign(std::initializer_list<T>);
     //Element access
-    ref operator[](size_type);//operator[]
-    const_ref operator[](size_type) const;//operator[]
+    T& operator[](int i) {
+        if (i < 0 || i >= sz)
+            throw std::out_of_range {"vector::operator[]"};
+        return elem[i];
+    }
     ref at(size_type);
     const_ref at(size_type) const;
     ref front();
     const_ref front() const;
-    ref back();
-    const_ref back() const;
     T* data() noexcept;
     const T* data() const noexcept;
     //Capacity
@@ -90,15 +96,12 @@ public:
     size_type size() const noexcept {return sz;}
     size_type max_size() const noexcept;
     size_type capacity() const noexcept {return cap;}
-    void reserve(size_type);
     void shrink_to_fit();
     //Modifiers
     void push_back(const T& v);
-    void push_back(T&& v);
+    //void push_back(T&& v);
     void pop_back();
     void swap(Vector& other);
-    void resize(size_type);
-    void resize(size_type, const T&);
     template<class ...Args> void emplace_back(Args&& ... args);
     template<class ... Args> iterator emplace(const_iterator, Args && ...);
     iterator insert(const_iterator, const T &);
@@ -108,7 +111,6 @@ public:
     iterator insert(const_iterator, std::initializer_list<T>);
     iterator erase(const_iterator);
     iterator erase(const_iterator, const_iterator);
-    void clear() noexcept;
 //Non-member functions
     bool operator==(const Vector<T>& v) const;//operator ==
     bool operator!=(const Vector<T>& v) const;//operator !=
@@ -116,51 +118,62 @@ public:
     bool operator <= (const Vector<T> &) const;
     bool operator > (const Vector<T> &) const;
     bool operator >= (const Vector<T> &) const;
+
+    T * begin() const {
+        return &elem[0];
+    };
+    T back() const {
+        return elem[sz-1];
+    };
+    T * end() const {
+        return &elem[sz];
+    };
+    void clear() {
+        delete[] elem;
+        elem = new T[0];
+        reallocate(0, 0);
+    }
+    void reserve(int n) {
+        if (n > cap) {
+            T* temp = elem;
+            elem = new T[n];
+            std::copy(&temp[0], &temp[sz], &elem[0]);
+            reallocate(sz, n);
+        }
+    }
+    void resize(unsigned int n) {
+        T* temp;
+        if(n < sz) {
+            temp = new T[n];
+            std::copy(&elem[0], &elem[n], &temp[0]);
+
+            delete[] elem;
+            elem = temp;
+            reallocate(n, n);
+        }
+        if (n > sz) {
+            if (n > cap) {
+                reserve(n);
+                std::fill(&elem[sz], &elem[n], 0);
+                reallocate(n, n);
+            }else {
+                temp = elem;
+                elem = new T[n];
+
+                std::copy(&temp[0], &temp[sz], &elem[0]);
+                std::fill(&elem[sz], &elem[n], 0);
+
+                reallocate(n, cap);
+            }
+        }
+    }
 };
-template<typename T>
-Vector<T>::Vector() noexcept {
-    elem = new T[cap];
-}
-template<typename T>
-Vector<T>::Vector(typename Vector<T>::size_type sp) {
-    size_type i;
-    cap = sp << 2;
-    elem = new T[cap];
-    for(i = 0; i < sp; ++i)
-        elem[i] = T();
-    sz = sp;
-}
-template<typename T>
-Vector<T>::Vector(typename Vector<T>::size_type sp, const T &value) {
-    size_type i;
-    cap = sp << 2;
-    elem = new T[cap];
-    for (i = 0; i < sp; ++i)
-        elem[i] = value;
-    sz = sp;
-}
-template<typename T>
-Vector<T>::Vector(typename Vector<T>::iterator first, typename Vector<T>::iterator last) {
-    size_type i, count = last - first;
-    cap = count << 2;
-    elem = new T[cap];
-    for (i = 0; i < count; ++i, ++first)
-        elem[i] = *first;
-    sz = count;
-}
 //Member type
     //iterators
-template<typename T>
-typename Vector<T>::iterator Vector<T>::begin() noexcept {
-    return elem;
-}
+
 template<typename T>
 typename Vector<T>::const_iterator Vector<T>::cbegin() const noexcept {
     return elem;
-}
-template<typename T>
-typename Vector<T>::iterator Vector<T>::end() noexcept {
-    return elem + sz;
 }
 template<typename T>
 typename Vector<T>::const_iterator Vector<T>::cend() const noexcept {
@@ -182,67 +195,37 @@ template<typename T>
 typename Vector<T>::const_reverse_iterator Vector<T>::crend() const noexcept {
     return reverse_iterator(elem);
 }
-    //reallocation
-template<typename T>
-inline void Vector<T>::reallocate() {
-    T *pT = new T[cap];
-    memcpy(pT, elem, sz * sizeof(T));
-    delete [] elem;
-    elem = pT;
-}
 //Member functions
     //Constructors
-template<typename T>
-Vector<T>::Vector(std::initializer_list<T> il) {
-    cap = il.size() << 2;
-    elem = new T[cap];
-    for(auto&new_i: il)
-        elem[sz++] = new_i;
-}
 
     //Operators
 template<typename T>
 Vector<T>& Vector<T>::operator=(const Vector<T>& v) { //Move operator l-value
-        size_type i;
-        if (cap < v.vec_sz) {
-            cap = v.sz << 2;
-            reallocate();
-        }
-        for (i = 0; i < v.sz; ++i)
-            elem[i] = v.elem[i];
+        if (&v == this) return *this;
+
+        T* newElem = new T[v.sz];
+        std::copy(v.begin(), v.end(), &newElem[0]);
+
+        delete[] elem;
+        elem = v.elem;
         sz = v.sz;
+        cap = v.cap;
+        return *this;
 }
 template<typename T>
 Vector<T>& Vector<T>::operator=(Vector<T>&& v) noexcept {
-    size_type i;
-    if (cap < v.sz) {
-        cap = v.sz << 2;
-        reallocate();
-    }
-    for (i = 0; i < v.sz; ++i)
-        elem[i] = std::move(v.elem[i]);
-    sz = v.sz;
+   if (&v == this)
+       return *this;
+   delete[] elem;
+   elem = v.elem;
+   sz = v.sz;
+   cap = v.cap;
+   v.elem = nullptr;
+   v.sz = 0;
+   v.cap = 0;
+   return *this;
 }
 //Other stuff
-template<typename T>
-Vector<T>::Vector(const Vector<T>& v){
-    size_type i;
-    cap = v.cap;
-    elem = new T[cap];
-    for (i = 0; i < v.sz; ++i)
-        elem[i] = v.elem[i];
-    sz = v.sz;
-}
-template<typename T>
-Vector<T>::Vector(Vector<T>&& v) noexcept {
-    size_type i;
-    cap = v.cap;
-    elem = new T[cap];
-    for (i = 0; i < v.sz; ++i)
-        elem[i] = std::move(v.elem[i]);
-    sz = v.sz;
-}
-
 template<typename T>
 void Vector<T>::assign(typename Vector<T>::size_type count, const T& value) {
     size_type i;
@@ -279,16 +262,6 @@ void Vector<T>::assign(std::initializer_list<T> il) {
 
     //Element access
 template<typename T>
-typename Vector<T>::ref Vector<T>::operator[](typename Vector<T>::size_type i) {
-    if (i < 0 || size() <= i) throw std::out_of_range {"Vector::operator[]"};
-    return elem[i];
-    }
-template<typename T>
-typename Vector<T>::const_ref Vector<T>::operator[](typename Vector<T>::size_type i) const {
-    if (i < 0 || size() <= i) throw std::out_of_range {"Vector::operator[]"};
-    return elem[i];
-}
-template<typename T>
 T& Vector<T>::front() {
     if(sz > 0)
         return elem[0];
@@ -301,18 +274,6 @@ const T& Vector<T>::front() const{
         return elem[0];
     else
         throw std::logic_error("Emty container");
-}
-template<typename T>
-T& Vector<T>::back() {
-    if(sz == 0)
-        throw std::logic_error("Emty");
-    return elem[sz - 1];
-}
-template<typename T>
-const T& Vector<T>::back() const {
-    if(sz == 0)
-        throw std::logic_error("Emty");
-    return elem[sz - 1];
 }
 template<typename T>
 typename Vector<T>::ref Vector<T>::at(size_type pos) {
@@ -337,13 +298,7 @@ const T* Vector<T>::data() const noexcept {
     return elem;
 }
 //Capacity
-template<typename T>
-void Vector<T>::reserve(typename Vector<T>::size_type size) {
-    if (size > cap) {
-        cap = size;
-        reallocate();
-    }
-}
+
 template<typename T>
 bool Vector<T>::empty() const noexcept {
     return sz = 0;
@@ -359,53 +314,15 @@ void Vector<T>::shrink_to_fit() {
 }
 //Modifiers
 template<typename T>
-void Vector<T>::resize(typename Vector<T>::size_type size) {
-    if(size > sz) {
-        if (size > cap) {
-            cap = size;
-            reallocate();
-        }
-    }else {
-        size_type i;
-        for (i = sz; i < size; ++i)
-            elem[i].~T();
-    }
-    sz = size;
-}
-template<typename T>
-void Vector<T>::resize(typename Vector<T>::size_type size, const T &c) {
-    if (size > sz) {
-        if (size > cap) {
-            cap = size;
-            reallocate();
-        }
-        size_type i;
-        for(i = sz; i < size; ++i)
-            elem[i] = c;
-    }else {
-        size_type i;
-        for (i = sz; i < size; ++i)
-            elem[i].~T();
-    }
-    sz = size;
-}
-template<typename T>
 void Vector<T>::push_back(const T& v) {
-    if (sz == cap) {
-        cap <<= 2;
-    reallocate();
-    }
-    elem[sz] = v;
-    ++sz;
-}
-template<typename T>
-void Vector<T>::push_back(T &&val) {
-    if (sz == cap) {
-        cap <<= 2;
-        reallocate();
-    }
-    elem[sz] = std::move(val);
-    ++sz;
+  if (sz+1 <= cap) {
+      elem[sz] = v;
+      sz++;
+  }else{
+      this->reserve(std::round(1+cap*1.5));
+      elem[sz] = v;
+      sz++;
+  }
 }
 template<typename T>
 void Vector<T>::pop_back() {
@@ -522,31 +439,28 @@ typename Vector<T>::iterator Vector<T>::insert(typename Vector<T>::const_iterato
     return f;
 }
 template<typename T>
-typename Vector<T>::iterator Vector<T>::erase(typename Vector<T>::const_iterator it) {
-    iterator iit = &elem[it - elem];
-    (*iit).~T();
-    memmove(iit, iit + 1, (sz - (it - elem) - 1) * sizeof(T));
-    --sz;
-    return iit;
-}
-template<typename T>
 typename Vector<T>::iterator Vector<T>::erase(typename Vector<T>::const_iterator first, typename Vector<T>::const_iterator last) {
-    iterator f = &elem[first - elem];
-    if (first == last) return f;
-    for (; first != last; ++first)
-        (*first).~T();
-    memmove(f, last, (sz - (last - elem)) * sizeof(T));
-    sz -= last - first;
-    return f;
-}
-template<typename T>
-void Vector<T>::clear() noexcept {
-    size_type i;
-    for (i = 0; i < sz; ++i)
-        elem[i].~T();
-    sz = 0;
-}
+    if ((first < this->begin() || first >= this->end())
+    || (last < this->begin() || last > this ->end()))
+        throw std::out_of_range {"Vector::erase, possesion of invalid memory"};
+    int tin = first - this->begin();
+    int tist = last - first;
+    T* temp = new T[cap];
 
+    int newSz = 0;
+    if (first != &elem[0]) {
+        std::copy(&elem[0], first, &temp[0]);
+        newSz += tin;
+    }
+    if (last != &elem[sz]) {
+        std::copy(last, &elem[sz], &temp[newSz]);
+        newSz += sz - tist - tin;
+    }
+    delete[] elem;
+    elem = temp;
+    reallocate(newSz, cap);
+    return &elem[tin];
+}
 //Non-member functions
 template<typename T>
 bool Vector<T>::operator==(const Vector<T>& v) const { //operator ==
